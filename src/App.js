@@ -1,50 +1,57 @@
-import React, { Component } from "react"
-import logo from "./logo.svg"
-import "./App.css"
+import React, {useEffect, useState} from 'react';
+import Recipe from './Recipe';
+import './App.css';
 
-class LambdaDemo extends Component {
-  constructor(props) {
-    super(props)
-    this.state = { loading: false, msg: null }
+const App = () => {
+
+  const APP_ID = '9e5c7a12';
+  const APP_KEY = '3eef65010362ee7371e28dda6a3bca27';
+
+  const [recipes, setRecipes] = useState([]);
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    getRecipes();
+  }, [query]);
+
+  const getRecipes = async () => {
+    const response = await fetch(`https://api.edamam.com/search?q=${query}&app_id=${APP_ID}&app_key=${APP_KEY}`);
+    const data = await response.json();
+    setRecipes(data.hits);
+    console.log(data.hits);
+  };
+
+  const updateSearch = e => {
+    setSearch(e.target.value);
   }
 
-  handleClick = api => e => {
-    e.preventDefault()
+  const getSearch = e => {
+    e.preventDefault();
+    setQuery(search);
+    setSearch('');
+  };
 
-    this.setState({ loading: true })
-    fetch("/.netlify/functions/" + api)
-      .then(response => response.json())
-      .then(json => this.setState({ loading: false, msg: json.msg }))
-  }
-
-  render() {
-    const { loading, msg } = this.state
-
-    return (
-      <p>
-        <button onClick={this.handleClick("hello")}>{loading ? "Loading..." : "Call Lambda"}</button>
-        <button onClick={this.handleClick("async-dadjoke")}>{loading ? "Loading..." : "Call Async Lambda"}</button>
-        <br />
-        <span>{msg}</span>
-      </p>
-    )
-  }
-}
-
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <LambdaDemo />
-        </header>
+  return(
+    <div className = "App">
+      <form onSubmit={getSearch} className="search-form"> 
+        <input className = "search-bar" type="text" value={search} onChange={updateSearch}/>
+        <button className="search-button" type = "submit">
+          Search
+        </button>
+      </form>
+      <div className="recipes">
+      {recipes.map(recipe =>(
+        <Recipe
+          key={recipe.recipe.label}
+          title = {recipe.recipe.label} 
+          image= {recipe.recipe.image}
+          ingredients={recipe.recipe.ingredients}
+        />
+      ))}
       </div>
-    )
-  }
+    </div>
+  );
 }
 
-export default App
+export default App;
